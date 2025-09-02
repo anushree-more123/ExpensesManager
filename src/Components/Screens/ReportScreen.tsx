@@ -1,51 +1,58 @@
-// screens/CategoryPieChartScreen.tsx
-import React, {useMemo, useState} from 'react';
-import {View, Text, StyleSheet, FlatList, TouchableOpacity} from 'react-native';
-import {PieChart} from 'react-native-gifted-charts';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { PieChart } from 'react-native-gifted-charts';
 import Icon from 'react-native-vector-icons/FontAwesome6';
 import moment from 'moment';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../Store/store';
 
-const categories = [
-  {label: 'Food and Drinks', icon: 'pizza-slice', color: '#FF7043'},
-  {label: 'Leisure', icon: 'face-smile-wink', color: '#81C784'},
-  {label: 'Transportation', icon: 'bus', color: '#4FC3F7'},
-  {label: 'Health', icon: 'hand-holding-medical', color: '#FF2C2C'},
-  {label: 'Shopping', icon: 'cart-shopping', color: '#7B1FA2'},
-  {label: 'Utilities', icon: 'screwdriver-wrench', color: '#5A5A5A'},
+interface Category {
+  label: string;
+  icon: string;
+  color: string;
+}
+
+interface ExpenseEntry {
+  category: string;
+  amount: string; 
+  date: string; 
+}
+
+const categories: Category[] = [
+  { label: 'Food and Drinks', icon: 'pizza-slice', color: '#FF7043' },
+  { label: 'Leisure', icon: 'face-smile-wink', color: '#81C784' },
+  { label: 'Transportation', icon: 'bus', color: '#4FC3F7' },
+  { label: 'Health', icon: 'hand-holding-medical', color: '#FF2C2C' },
+  { label: 'Shopping', icon: 'cart-shopping', color: '#7B1FA2' },
+  { label: 'Utilities', icon: 'screwdriver-wrench', color: '#5A5A5A' },
 ];
 
-const sampleExpenses = [
-  {category: 'Shopping', amount: 800.5, date: '2025-06-01'},
-  {category: 'Shopping', amount: 500, date: '2025-06-05'},
-  {category: 'Food and Drinks', amount: 300.49, date: '2025-06-03'},
-  {category: 'Leisure', amount: 200, date: '2025-06-10'},
-  {category: 'Transportation', amount: 120, date: '2025-06-12'},
-  {category: 'Utilities', amount: 100, date: '2025-06-15'},
-];
+const ReportScreen: React.FC = () => {
+  const expenseHistory = useSelector((state: RootState) => state.expenses.expenseHistory);
 
-const groupByCategory = data => {
-  const grouped = {};
-  data.forEach(entry => {
-    if (!grouped[entry.category]) grouped[entry.category] = [];
-    grouped[entry.category].push(entry);
-  });
-  return grouped;
-};
+  const [period, setPeriod] = useState<'Monthly' | 'Weekly' | 'Yearly'>('Monthly');
 
-const ReportScreen = () => {
-  const [period, setPeriod] = useState<'Monthly' | 'Weekly' | 'Yearly'>(
-    'Monthly',
-  );
+  const currentMonth = moment().month(); 
+  const currentYear = moment().year();
 
-  const groupedData = useMemo(
-    () => groupByCategory(sampleExpenses),
-    [sampleExpenses],
-  );
+  const groupByCategory = (data: ExpenseEntry[]) => {
+    const grouped: { [key: string]: ExpenseEntry[] } = {};
+    data.forEach(entry => {
+      const entryDate = moment(entry.date);
+      if (entryDate.month() === currentMonth && entryDate.year() === currentYear) {
+        if (!grouped[entry.category]) grouped[entry.category] = [];
+        grouped[entry.category].push(entry);
+      }
+    });
+    return grouped;
+  };
+
+  const groupedData = useMemo(() => groupByCategory(expenseHistory), [expenseHistory]);
 
   const pieData = useMemo(
     () =>
       Object.keys(groupedData).map(key => {
-        const total = groupedData[key].reduce((sum, e) => sum + e.amount, 0);
+        const total = groupedData[key].reduce((sum, e) => sum + parseFloat(e.amount), 0); 
         const categoryMeta = categories.find(c => c.label === key);
         return {
           value: total,
@@ -53,26 +60,25 @@ const ReportScreen = () => {
           label: key,
         };
       }),
-    [groupedData],
+    [groupedData]
   );
 
-  const totalAmount = pieData.reduce((sum, p) => sum + p.value, 0);
+  const totalAmount = pieData.reduce(
+    (sum, p) => sum + (typeof p.value === 'number' && !isNaN(p.value) ? p.value : 0),
+    0
+  );
 
-  const renderLegendItem = ({item}) => {
+  const renderLegendItem = ({ item }: { item: { label: string; value: string } }) => {
     const meta = categories.find(c => c.label === item.label);
+    const value = parseFloat(item.value); 
     return (
       <View style={styles.card}>
         <View style={styles.rowBetween}>
           <View style={styles.rowLeft}>
-            <Icon
-              name={meta?.icon}
-              size={20}
-              color={meta?.color}
-              style={{marginRight: 8}}
-            />
+            <Icon name={meta?.icon} size={20} color={meta?.color} style={{ marginRight: 8 }} />
             <Text style={styles.cardTitle}>{item.label}</Text>
           </View>
-          <Text style={styles.cardAmount}>${item.value.toFixed(2)}</Text>
+          <Text style={styles.cardAmount}>₹{value.toFixed(2)}</Text> 
         </View>
         <Text style={styles.cardSubtitle}>
           {groupedData[item.label]?.length || 0} Transactions
@@ -87,9 +93,7 @@ const ReportScreen = () => {
         <View style={styles.headerRow}>
           <Text style={styles.headerTitle}>Summary</Text>
           <TouchableOpacity>
-            <Text style={styles.periodSelector}>
-              {moment().format('MMMM YYYY')}
-            </Text>
+            <Text style={styles.periodSelector}>{moment().format('MMMM YYYY')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -105,9 +109,7 @@ const ReportScreen = () => {
             centerLabelComponent={() => (
               <View>
                 <Text style={styles.centerLabel}>Amount</Text>
-                <Text style={styles.centerValue}>
-                  ${totalAmount.toFixed(0)}
-                </Text>
+                <Text style={styles.centerValue}>₹{totalAmount.toFixed(0)}</Text> 
               </View>
             )}
           />
@@ -118,16 +120,14 @@ const ReportScreen = () => {
         data={pieData}
         renderItem={renderLegendItem}
         keyExtractor={item => item.label}
-        contentContainerStyle={{padding: 20}}
+        contentContainerStyle={{ padding: 20 }}
       />
     </View>
   );
 };
 
-export default ReportScreen;
-
 const styles = StyleSheet.create({
-  container: {flex: 1, width: '100%'},
+  container: { flex: 1, width: '100%' },
   headerCard: {
     margin: 16,
     borderRadius: 16,
@@ -193,3 +193,5 @@ const styles = StyleSheet.create({
     color: '#000',
   },
 });
+
+export default ReportScreen;

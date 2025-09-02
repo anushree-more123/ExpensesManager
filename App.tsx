@@ -4,9 +4,10 @@ import {useColorScheme, StyleSheet} from 'react-native';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {Provider as PaperProvider} from 'react-native-paper';
 import {Provider} from 'react-redux';
-import {store} from './src/Store/store';
+import {store, persistor} from './src/Store/store';
 import {lightTheme, darkTheme} from './src/theme/theme';
 import AppLoaded from './AppLoaded';
+import {PersistGate} from 'redux-persist/integration/react';
 
 function App(): React.JSX.Element {
   const colorScheme = useColorScheme();
@@ -14,13 +15,15 @@ function App(): React.JSX.Element {
 
   return (
     <Provider store={store}>
-      <PaperProvider theme={isDark ? darkTheme : lightTheme}>
-        <SafeAreaProvider>
-          <SafeAreaView style={styles.container}>
-            <AppLoaded />
-          </SafeAreaView>
-        </SafeAreaProvider>
-      </PaperProvider>
+      <PersistGate loading={null} persistor={persistor}>
+        <PaperProvider theme={isDark ? darkTheme : lightTheme}>
+          <SafeAreaProvider>
+            <SafeAreaView style={styles.container}>
+              <AppLoaded />
+            </SafeAreaView>
+          </SafeAreaProvider>
+        </PaperProvider>
+      </PersistGate>
     </Provider>
   );
 }
