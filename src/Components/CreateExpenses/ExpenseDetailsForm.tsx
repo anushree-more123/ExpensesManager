@@ -156,6 +156,7 @@ const getStyles = (colors: any) =>
     categoryLabel: {
       marginTop: 6,
       fontSize: 14,
+      textAlign:'center',
       fontFamily: 'Roboto-Regular',
     },
     inputRow: {
