@@ -1,9 +1,11 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+// ReportScreen.tsx
+import React, { useMemo, useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Animated, LayoutChangeEvent } from 'react-native';
 import { PieChart } from 'react-native-gifted-charts';
 import Icon from 'react-native-vector-icons/FontAwesome6';
 import moment from 'moment';
 import { useSelector } from 'react-redux';
+import { useTheme } from 'react-native-paper';
 import { RootState } from '../../Store/store';
 
 interface Category {
@@ -11,11 +13,10 @@ interface Category {
   icon: string;
   color: string;
 }
-
 interface ExpenseEntry {
   category: string;
-  amount: string; 
-  date: string; 
+  amount: string;
+  date: string;
 }
 
 const categories: Category[] = [
@@ -27,19 +28,57 @@ const categories: Category[] = [
   { label: 'Utilities', icon: 'screwdriver-wrench', color: '#5A5A5A' },
 ];
 
+const TABS = ['Monthly', 'Weekly', 'Yearly'] as const;
+type Period = typeof TABS[number];
+
 const ReportScreen: React.FC = () => {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
   const expenseHistory = useSelector((state: RootState) => state.expenses.expenseHistory);
+  const [period, setPeriod] = useState<Period>('Monthly');
 
-  const [period, setPeriod] = useState<'Monthly' | 'Weekly' | 'Yearly'>('Monthly');
+  const [containerWidth, setContainerWidth] = useState(0);
+  const tabWidth = containerWidth > 0 ? (containerWidth - 8 /*padding x2 of 4*/ ) / TABS.length : 0;
 
-  const currentMonth = moment().month(); 
+  const translateX = useRef(new Animated.Value(0)).current;
+
+  const onContainerLayout = (e: LayoutChangeEvent) => {
+    setContainerWidth(e.nativeEvent.layout.width);
+  };
+
+  const indexFor = (p: Period) => TABS.indexOf(p);
+
+  useEffect(() => {
+    if (tabWidth <= 0) return;
+    Animated.timing(translateX, {
+      toValue: indexFor(period) * tabWidth,
+      duration: 260,
+      useNativeDriver: true, 
+    }).start();
+  }, [period, tabWidth, translateX]);
+
+  const currentMonth = moment().month();
   const currentYear = moment().year();
+  const currentWeek = moment().week();
 
   const groupByCategory = (data: ExpenseEntry[]) => {
     const grouped: { [key: string]: ExpenseEntry[] } = {};
     data.forEach(entry => {
       const entryDate = moment(entry.date);
-      if (entryDate.month() === currentMonth && entryDate.year() === currentYear) {
+      let periodMatch = false;
+      switch (period) {
+        case 'Monthly':
+          periodMatch = entryDate.month() === currentMonth && entryDate.year() === currentYear;
+          break;
+        case 'Weekly':
+          periodMatch = entryDate.week() === currentWeek && entryDate.year() === currentYear;
+          break;
+        case 'Yearly':
+          periodMatch = entryDate.year() === currentYear;
+          break;
+      }
+      if (periodMatch) {
         if (!grouped[entry.category]) grouped[entry.category] = [];
         grouped[entry.category].push(entry);
       }
@@ -47,16 +86,16 @@ const ReportScreen: React.FC = () => {
     return grouped;
   };
 
-  const groupedData = useMemo(() => groupByCategory(expenseHistory), [expenseHistory]);
+  const groupedData = useMemo(() => groupByCategory(expenseHistory), [expenseHistory, period]);
 
   const pieData = useMemo(
     () =>
       Object.keys(groupedData).map(key => {
-        const total = groupedData[key].reduce((sum, e) => sum + parseFloat(e.amount), 0); 
+        const total = groupedData[key].reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
         const categoryMeta = categories.find(c => c.label === key);
         return {
           value: total,
-          color: categoryMeta?.color || '#ccc',
+          color: categoryMeta?.color || colors['500'],
           label: key,
         };
       }),
@@ -68,17 +107,22 @@ const ReportScreen: React.FC = () => {
     0
   );
 
-  const renderLegendItem = ({ item }: { item: { label: string; value: string } }) => {
+  const renderLegendItem = ({ item }: { item: { label: string; value: number } }) => {
     const meta = categories.find(c => c.label === item.label);
-    const value = parseFloat(item.value); 
+    const amount = typeof item.value === 'number' ? item.value : 0;
     return (
       <View style={styles.card}>
         <View style={styles.rowBetween}>
           <View style={styles.rowLeft}>
-            <Icon name={meta?.icon} size={20} color={meta?.color} style={{ marginRight: 8 }} />
+            <Icon
+              name={meta?.icon || 'circle'}
+              size={20}
+              color={meta?.color || colors['500']}
+              style={{ marginRight: 8 }}
+            />
             <Text style={styles.cardTitle}>{item.label}</Text>
           </View>
-          <Text style={styles.cardAmount}>₹{value.toFixed(2)}</Text> 
+          <Text style={styles.cardAmount}>₹{amount.toFixed(2)}</Text>
         </View>
         <Text style={styles.cardSubtitle}>
           {groupedData[item.label]?.length || 0} Transactions
@@ -87,13 +131,61 @@ const ReportScreen: React.FC = () => {
     );
   };
 
+  const TabBar = () => (
+    <View style={styles.tabContainer} onLayout={onContainerLayout}>
+      {tabWidth > 0 && (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.tabIndicator,
+            {
+              width: tabWidth,
+              transform: [{ translateX }],
+              backgroundColor: colors.primary,
+            },
+          ]}
+        />
+      )}
+
+      {/* Tabs */}
+      {TABS.map(p => {
+        const active = period === p;
+        return (
+          <TouchableOpacity
+            key={p}
+            style={[styles.tab, { width: tabWidth || undefined }]}
+            onPress={() => setPeriod(p)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Text style={[styles.tabText, active && styles.tabTextActive]}>{p}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+
+  const getPeriodLabel = () => {
+    switch (period) {
+      case 'Monthly':
+        return moment().format('MMMM YYYY');
+      case 'Weekly':
+        return `Week ${currentWeek} of ${currentYear}`;
+      case 'Yearly':
+        return currentYear.toString();
+      default:
+        return moment().format('MMMM YYYY');
+    }
+  };
+
   return (
     <View style={styles.container}>
+      <TabBar />
+
       <View style={styles.headerCard}>
         <View style={styles.headerRow}>
           <Text style={styles.headerTitle}>Summary</Text>
           <TouchableOpacity>
-            <Text style={styles.periodSelector}>{moment().format('MMMM YYYY')}</Text>
+            <Text style={styles.periodSelector}>{getPeriodLabel()}</Text>
           </TouchableOpacity>
         </View>
 
@@ -102,14 +194,14 @@ const ReportScreen: React.FC = () => {
             data={pieData}
             donut
             showText
-            textColor="#000"
+            textColor={colors.onSurface}
             textSize={18}
             radius={90}
             innerRadius={60}
             centerLabelComponent={() => (
               <View>
                 <Text style={styles.centerLabel}>Amount</Text>
-                <Text style={styles.centerValue}>₹{totalAmount.toFixed(0)}</Text> 
+                <Text style={styles.centerValue}>₹{totalAmount.toFixed(0)}</Text>
               </View>
             )}
           />
@@ -120,78 +212,127 @@ const ReportScreen: React.FC = () => {
         data={pieData}
         renderItem={renderLegendItem}
         keyExtractor={item => item.label}
-        contentContainerStyle={{ padding: 20 }}
+        contentContainerStyle={styles.listContent}
       />
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, width: '100%' },
-  headerCard: {
-    margin: 16,
-    borderRadius: 16,
-    padding: 20,
-    backgroundColor: '#fff',
-    elevation: 2,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  periodSelector: {
-    fontSize: 14,
-    color: '#888',
-  },
-  pieChartWrapper: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  centerLabel: {
-    fontSize: 12,
-    textAlign: 'center',
-    color: '#999',
-  },
-  centerValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  card: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    elevation: 1,
-  },
-  rowBetween: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  rowLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  cardSubtitle: {
-    fontSize: 12,
-    color: '#777',
-    marginTop: 4,
-  },
-  cardAmount: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-  },
-});
-
 export default ReportScreen;
+
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    container: { flex: 1, width: '100%', backgroundColor: colors.background },
+    listContent: { padding: 20, paddingBottom: 120 },
+
+    // Segmented container
+    tabContainer: {
+      position: 'relative',
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 12,
+      marginHorizontal: 16,
+      padding: 4,                 
+      borderRadius: 999,
+      backgroundColor: colors.surface,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.outline,
+      overflow: 'hidden',
+    },
+    tabIndicator: {
+      position: 'absolute',
+      top: 4,
+      bottom: 4,
+      left: 4,                    
+      borderRadius: 999,
+    },
+    tab: {
+      height: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 999,
+    },
+    tabText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.onSurface,    
+    },
+    tabTextActive: {
+      color: colors.onPrimary,     
+      fontWeight: '700',
+    },
+
+    // Header card
+    headerCard: {
+      margin: 16,
+      borderRadius: 16,
+      padding: 20,
+      backgroundColor: colors.surface,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.outline,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: colors.onSurface,
+    },
+    periodSelector: {
+      fontSize: 14,
+      color: colors.onSurface,
+      opacity: 0.7,
+    },
+    pieChartWrapper: {
+      alignItems: 'center',
+      marginTop: 20,
+    },
+
+    centerLabel: {
+      fontSize: 12,
+      textAlign: 'center',
+      color: colors.outline,
+    },
+    centerValue: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      textAlign: 'center',
+      color: colors.onSurface,
+    },
+
+    card: {
+      backgroundColor: colors.surface,
+      padding: 16,
+      borderRadius: 12,
+      marginBottom: 12,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.outline,
+    },
+    rowBetween: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    rowLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    cardTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.onSurface,
+    },
+    cardSubtitle: {
+      fontSize: 12,
+      color: colors.outline,
+      marginTop: 4,
+    },
+    cardAmount: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.onSurface,
+    },
+  });
