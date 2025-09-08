@@ -79,7 +79,7 @@ Follow these steps to set up and run the project:
 ## 🔐 Upcoming Features
 
 - 🔔 Expense reminders & notifications
-- 📈 Weekly and monthly expense analytics
+- 📈 Weekly, monthly and yearly expense analytics
 - ☁️ Cloud sync and login system
 - 🌐 Localization support
 
