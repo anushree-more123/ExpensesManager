@@ -1,12 +1,13 @@
-// ReportScreen.tsx
-import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Animated, LayoutChangeEvent } from 'react-native';
-import { PieChart } from 'react-native-gifted-charts';
-import Icon from 'react-native-vector-icons/FontAwesome6';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import moment from 'moment';
 import { useSelector } from 'react-redux';
 import { useTheme } from 'react-native-paper';
 import { RootState } from '../../Store/store';
+import { Period } from '../ReportAnalytics/ReportAnalyticsType';
+import ReportSummaryChart from '../ReportAnalytics/ReportSummaryChart';
+import ReportList from '../ReportAnalytics/ReportList';
+import DurationTab from '../ReportAnalytics/DurationTab';
 
 interface Category {
   label: string;
@@ -28,9 +29,6 @@ const categories: Category[] = [
   { label: 'Utilities', icon: 'screwdriver-wrench', color: '#5A5A5A' },
 ];
 
-const TABS = ['Monthly', 'Weekly', 'Yearly'] as const;
-type Period = typeof TABS[number];
-
 const ReportScreen: React.FC = () => {
   const { colors } = useTheme();
   const styles = getStyles(colors);
@@ -38,33 +36,13 @@ const ReportScreen: React.FC = () => {
   const expenseHistory = useSelector((state: RootState) => state.expenses.expenseHistory);
   const [period, setPeriod] = useState<Period>('Monthly');
 
-  const [containerWidth, setContainerWidth] = useState(0);
-  const tabWidth = containerWidth > 0 ? (containerWidth - 8 /*padding x2 of 4*/ ) / TABS.length : 0;
-
-  const translateX = useRef(new Animated.Value(0)).current;
-
-  const onContainerLayout = (e: LayoutChangeEvent) => {
-    setContainerWidth(e.nativeEvent.layout.width);
-  };
-
-  const indexFor = (p: Period) => TABS.indexOf(p);
-
-  useEffect(() => {
-    if (tabWidth <= 0) return;
-    Animated.timing(translateX, {
-      toValue: indexFor(period) * tabWidth,
-      duration: 260,
-      useNativeDriver: true, 
-    }).start();
-  }, [period, tabWidth, translateX]);
-
   const currentMonth = moment().month();
   const currentYear = moment().year();
   const currentWeek = moment().week();
 
   const groupByCategory = (data: ExpenseEntry[]) => {
     const grouped: { [key: string]: ExpenseEntry[] } = {};
-    data.forEach(entry => {
+    data.forEach((entry) => {
       const entryDate = moment(entry.date);
       let periodMatch = false;
       switch (period) {
@@ -90,9 +68,9 @@ const ReportScreen: React.FC = () => {
 
   const pieData = useMemo(
     () =>
-      Object.keys(groupedData).map(key => {
+      Object.keys(groupedData).map((key) => {
         const total = groupedData[key].reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
-        const categoryMeta = categories.find(c => c.label === key);
+        const categoryMeta = categories.find((c) => c.label === key);
         return {
           value: total,
           color: categoryMeta?.color || colors['500'],
@@ -105,63 +83,6 @@ const ReportScreen: React.FC = () => {
   const totalAmount = pieData.reduce(
     (sum, p) => sum + (typeof p.value === 'number' && !isNaN(p.value) ? p.value : 0),
     0
-  );
-
-  const renderLegendItem = ({ item }: { item: { label: string; value: number } }) => {
-    const meta = categories.find(c => c.label === item.label);
-    const amount = typeof item.value === 'number' ? item.value : 0;
-    return (
-      <View style={styles.card}>
-        <View style={styles.rowBetween}>
-          <View style={styles.rowLeft}>
-            <Icon
-              name={meta?.icon || 'circle'}
-              size={20}
-              color={meta?.color || colors['500']}
-              style={{ marginRight: 8 }}
-            />
-            <Text style={styles.cardTitle}>{item.label}</Text>
-          </View>
-          <Text style={styles.cardAmount}>₹{amount.toFixed(2)}</Text>
-        </View>
-        <Text style={styles.cardSubtitle}>
-          {groupedData[item.label]?.length || 0} Transactions
-        </Text>
-      </View>
-    );
-  };
-
-  const TabBar = () => (
-    <View style={styles.tabContainer} onLayout={onContainerLayout}>
-      {tabWidth > 0 && (
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            styles.tabIndicator,
-            {
-              width: tabWidth,
-              transform: [{ translateX }],
-              backgroundColor: colors.primary,
-            },
-          ]}
-        />
-      )}
-
-      {/* Tabs */}
-      {TABS.map(p => {
-        const active = period === p;
-        return (
-          <TouchableOpacity
-            key={p}
-            style={[styles.tab, { width: tabWidth || undefined }]}
-            onPress={() => setPeriod(p)}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Text style={[styles.tabText, active && styles.tabTextActive]}>{p}</Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
   );
 
   const getPeriodLabel = () => {
@@ -179,7 +100,7 @@ const ReportScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <TabBar />
+      <DurationTab value={period} onChange={setPeriod} />
 
       <View style={styles.headerCard}>
         <View style={styles.headerRow}>
@@ -189,31 +110,10 @@ const ReportScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.pieChartWrapper}>
-          <PieChart
-            data={pieData}
-            donut
-            showText
-            textColor={colors.onSurface}
-            textSize={18}
-            radius={90}
-            innerRadius={60}
-            centerLabelComponent={() => (
-              <View>
-                <Text style={styles.centerLabel}>Amount</Text>
-                <Text style={styles.centerValue}>₹{totalAmount.toFixed(0)}</Text>
-              </View>
-            )}
-          />
-        </View>
+        <ReportSummaryChart pieData={pieData} totalAmount={totalAmount} />
       </View>
 
-      <FlatList
-        data={pieData}
-        renderItem={renderLegendItem}
-        keyExtractor={item => item.label}
-        contentContainerStyle={styles.listContent}
-      />
+      <ReportList data={pieData} groupedData={groupedData} categories={categories} />
     </View>
   );
 };
@@ -225,44 +125,6 @@ const getStyles = (colors: any) =>
     container: { flex: 1, width: '100%', backgroundColor: colors.background },
     listContent: { padding: 20, paddingBottom: 120 },
 
-    // Segmented container
-    tabContainer: {
-      position: 'relative',
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: 12,
-      marginHorizontal: 16,
-      padding: 4,                 
-      borderRadius: 999,
-      backgroundColor: colors.surface,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.outline,
-      overflow: 'hidden',
-    },
-    tabIndicator: {
-      position: 'absolute',
-      top: 4,
-      bottom: 4,
-      left: 4,                    
-      borderRadius: 999,
-    },
-    tab: {
-      height: 36,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: 999,
-    },
-    tabText: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: colors.onSurface,    
-    },
-    tabTextActive: {
-      color: colors.onPrimary,     
-      fontWeight: '700',
-    },
-
-    // Header card
     headerCard: {
       margin: 16,
       borderRadius: 16,
