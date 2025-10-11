@@ -20,20 +20,13 @@ interface ExpenseEntry {
   date: string;
 }
 
-const categories: Category[] = [
-  { label: 'Food and Drinks', icon: 'pizza-slice', color: '#FF7043' },
-  { label: 'Leisure', icon: 'face-smile-wink', color: '#81C784' },
-  { label: 'Transportation', icon: 'bus', color: '#4FC3F7' },
-  { label: 'Health', icon: 'hand-holding-medical', color: '#FF2C2C' },
-  { label: 'Shopping', icon: 'cart-shopping', color: '#7B1FA2' },
-  { label: 'Utilities', icon: 'screwdriver-wrench', color: '#5A5A5A' },
-];
-
 const ReportScreen: React.FC = () => {
   const { colors } = useTheme();
   const styles = getStyles(colors);
 
   const expenseHistory = useSelector((state: RootState) => state.expenses.expenseHistory);
+    const {categoriesList} = useSelector((state: RootState)=> state.expenses)
+  
   const [period, setPeriod] = useState<Period>('Monthly');
 
   const currentMonth = moment().month();
@@ -70,7 +63,7 @@ const ReportScreen: React.FC = () => {
     () =>
       Object.keys(groupedData).map((key) => {
         const total = groupedData[key].reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
-        const categoryMeta = categories.find((c) => c.label === key);
+        const categoryMeta = categoriesList.find((c) => c.label === key);
         return {
           value: total,
           color: categoryMeta?.color || colors['500'],
@@ -113,7 +106,7 @@ const ReportScreen: React.FC = () => {
         <ReportSummaryChart pieData={pieData} totalAmount={totalAmount} />
       </View>
 
-      <ReportList data={pieData} groupedData={groupedData} categories={categories} />
+      <ReportList data={pieData} groupedData={groupedData}  />
     </View>
   );
 };

@@ -1,20 +1,22 @@
 import React from 'react';
-import { FlatList, View, Text, StyleSheet } from 'react-native';
+import {FlatList, View, Text, StyleSheet} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome6';
-import { useTheme } from 'react-native-paper';
+import {useTheme} from 'react-native-paper';
+import {useSelector} from 'react-redux';
+import {RootState} from '../../Store/store';
 
 interface ReportListProps {
-  data: { label: string; value: number }[];
-  groupedData: { [key: string]: any[] };
-  categories: { label: string; icon: string; color: string }[];
+  data: {label: string; value: number}[];
+  groupedData: {[key: string]: any[]};
 }
 
-const ReportList: React.FC<ReportListProps> = ({ data, groupedData, categories }) => {
-  const { colors } = useTheme();
+const ReportList: React.FC<ReportListProps> = ({data, groupedData}) => {
+  const {colors} = useTheme();
   const styles = getStyles(colors);
+  const {categoriesList} = useSelector((state: RootState) => state.expenses);
 
-  const renderLegendItem = ({ item }: { item: { label: string; value: number } }) => {
-    const meta = categories.find((c) => c.label === item.label);
+  const renderLegendItem = ({item}: {item: {label: string; value: number}}) => {
+    const meta = categoriesList.find(c => c.label === item.label);
     const amount = typeof item.value === 'number' ? item.value : 0;
     return (
       <View style={styles.card}>
@@ -24,7 +26,7 @@ const ReportList: React.FC<ReportListProps> = ({ data, groupedData, categories }
               name={meta?.icon || 'circle'}
               size={20}
               color={meta?.color || colors['500']}
-              style={{ marginRight: 8 }}
+              style={{marginRight: 8}}
             />
             <Text style={styles.cardTitle}>{item.label}</Text>
           </View>
@@ -41,7 +43,7 @@ const ReportList: React.FC<ReportListProps> = ({ data, groupedData, categories }
     <FlatList
       data={data}
       renderItem={renderLegendItem}
-      keyExtractor={(item) => item.label}
+      keyExtractor={item => item.label}
       contentContainerStyle={styles.listContent}
     />
   );
@@ -51,7 +53,7 @@ export default ReportList;
 
 const getStyles = (colors: any) =>
   StyleSheet.create({
-    listContent: { padding: 20, paddingBottom: 120 },
+    listContent: {padding: 20, paddingBottom: 120},
     card: {
       backgroundColor: colors.surface,
       padding: 16,

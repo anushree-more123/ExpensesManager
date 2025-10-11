@@ -5,20 +5,19 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/FontAwesome6';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../Navigation/navigationTypes';
+import type { ExpenseEntry } from '../CreateExpenses/expensesSlice';
 
-// Define types for the props
 type NavigationProp = StackNavigationProp<RootStackParamList, 'UpdateExpenses'>;
 
+type DisplayItem = ExpenseEntry & {
+  icon: string;
+  color: string;
+  title: string;
+  subtitle: string;
+};
+
 interface TransactionItemProps {
-  item: {
-    icon: string;
-    color: string;
-    title: string;
-    subtitle: string;
-    amount: string; // Initially a string, but will be converted to a number for display
-    date: string; // ISO string date
-    id: string; // Unique identifier for the transaction
-  };
+  item: DisplayItem;
 }
 
 const TransactionItem: React.FC<TransactionItemProps> = ({ item }) => {
@@ -26,15 +25,21 @@ const TransactionItem: React.FC<TransactionItemProps> = ({ item }) => {
   const { colors } = useTheme();
   const styles = getStyles(colors);
 
-  const amount = parseFloat(item.amount); // Convert amount to number
+  const amount = parseFloat(item.amount || '0');
 
   return (
     <TouchableOpacity
-      onPress={() => {
+      onPress={() =>
         navigation.navigate('UpdateExpenses', {
-          expenseDetails: item,
-        });
-      }}
+          expenseDetails: {
+            id: item.id,
+            amount: item.amount,
+            note: item.note ?? '',
+            date: item.date,
+            category: item.category,
+          },
+        })
+      }
     >
       <View style={styles.transactionItem}>
         <View style={[styles.iconWrapper, { backgroundColor: item.color }]}>
