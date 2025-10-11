@@ -1,68 +1,122 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {View, TouchableOpacity, StyleSheet, Platform} from 'react-native';
-// @ts-ignore
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {useTheme} from 'react-native-paper';
 import {useDispatch} from 'react-redux';
 import uuid from 'react-native-uuid';
 import {
   addExpenseHistory,
-  ExpenseEntry,
   updateExpenseHistory,
+  type ExpenseEntry,
 } from '../CreateExpenses/expensesSlice';
 import AmountDisplay from '../CreateExpenses/AmountDisplay';
 import CalculatorKeyboard from '../CreateExpenses/CalculatorKeyboard';
 import ExpenseDetailsForm from '../CreateExpenses/ExpenseDetailsForm';
 
-const AddUpdateExpenseScreen = ({navigation, route}: any) => {
+import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {RootStackParamList} from '../Navigation/RootStackParamList';
+
+type Nav = StackNavigationProp<
+  RootStackParamList,
+  'AddExpenses' | 'UpdateExpenses'
+>;
+type Rte = RouteProp<RootStackParamList, 'AddExpenses' | 'UpdateExpenses'>;
+
+type ExpenseDetailsState = Omit<ExpenseEntry, 'id' | 'date'> & {
+  id?: string;
+  date: Date | string;
+};
+
+// Accept both shapes for backward-compat:
+type LegacyExpenseParam = {
+  id: string;
+  amount: string;
+  title: string; // maps to note
+  subtitle: string; // maps to category
+  date: string;
+};
+
+function normalizeFromRouteParam(
+  e?: ExpenseEntry | LegacyExpenseParam,
+): ExpenseDetailsState | null {
+  if (!e) return null;
+  // Legacy shape (title/subtitle)
+  if ('title' in e && 'subtitle' in e) {
+    return {
+      id: e.id,
+      amount: e.amount ?? '',
+      note: e.title ?? '',
+      category: e.subtitle ?? '',
+      date: e.date,
+    };
+  }
+  // Proper ExpenseEntry
+  return {
+    id: e.id,
+    amount: e.amount ?? '',
+    note: e.note ?? '',
+    category: e.category ?? '',
+    date: e.date,
+  };
+}
+
+const AddUpdateExpenseScreen: React.FC = () => {
+  const navigation = useNavigation<Nav>();
+  const route = useRoute<Rte>();
+
   const dispatch = useDispatch();
   const {colors} = useTheme();
   const styles = getStyles(colors);
-  const initialState = {
-    amount: '',
-    note: '',
-    date: new Date(),
-    category: '',
-  };
-  const [expenseDetails, setExpenseDetails] = useState({...initialState});
+
+  const initialState: ExpenseDetailsState = useMemo(
+    () => ({
+      amount: '',
+      note: '',
+      date: new Date(),
+      category: '',
+      id: undefined,
+    }),
+    [],
+  );
+
+  const [expenseDetails, setExpenseDetails] = useState<ExpenseDetailsState>({
+    ...initialState,
+  });
   const [showDetails, setShowDetails] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  // Pre-fill when UpdateExpenses
   useEffect(() => {
-    if (route.name === 'UpdateExpenses' && route.params) {
-      const expense = route.params.expenseDetails;
-      const cpyExpense = {
-        amount: expense.amount,
-        note: expense.title,
-        date: expense.date,
-        category: expense.subtitle,
-        id: expense.id,
-      };
-      setExpenseDetails({...cpyExpense});
+    if (route.name === 'UpdateExpenses') {
+      const pre = normalizeFromRouteParam(route.params?.expenseDetails as any);
+      if (pre) {
+        setExpenseDetails(pre);
+        setShowDetails(true);
+      }
     }
   }, [route]);
 
   const handleKeyPress = (key: string) => {
     const operators = ['+', '-', '*', '/', '.'];
 
-    // if (key === 'C') {
-    //   setExpenseDetails(prev => ({...prev, amount: ''}));
-    //   return;
-    // }
-
     if (key === '✓') {
       try {
         const cleanAmount = expenseDetails.amount.replace(/[-*+/\.]+$/, '');
         if (cleanAmount !== '') {
+          // NOTE: you already use eval; kept it as-is
           const result = eval(cleanAmount);
           if (!isNaN(result)) {
-            setExpenseDetails(prev => ({...prev, amount: result.toFixed(2)}));
+            setExpenseDetails(prev => ({
+              ...prev,
+              amount: Number(result).toFixed(2),
+            }));
             setShowDetails(true);
           }
         } else {
           setShowDetails(true);
         }
-      } catch (e) {
+      } catch {
         console.warn('Invalid expression');
       }
       return;
@@ -99,32 +153,38 @@ const AddUpdateExpenseScreen = ({navigation, route}: any) => {
   };
 
   const saveExpense = () => {
-    if (expenseDetails.amount.length > 0) {
-      if (route.name === 'UpdateExpenses') {
-        let cpyExpenseD = {
-          ...expenseDetails,
-          date:
-            typeof expenseDetails.date === 'string'
-              ? expenseDetails.date
-              : expenseDetails.date.toISOString(),
-        };
-        dispatch(updateExpenseHistory(cpyExpenseD));
-      } else {
-        let cpyExpenseD = {
-          id: uuid.v4(),
-          ...expenseDetails,
-          date: expenseDetails.date.toISOString(),
-        };
+    if (expenseDetails.amount.length === 0) return;
 
-        if (cpyExpenseD.category.length === 0) {
-          cpyExpenseD.category = 'Others';
-        }
+    const normalizedDate =
+      typeof expenseDetails.date === 'string'
+        ? expenseDetails.date
+        : expenseDetails.date.toISOString();
 
-        dispatch(addExpenseHistory(cpyExpenseD));
+    if (route.name === 'UpdateExpenses') {
+      if (!expenseDetails.id) {
+        console.warn('Missing expense id for update');
+        return;
       }
-
-      closeAddExpenses();
+      const payload: ExpenseEntry = {
+        id: expenseDetails.id,
+        amount: expenseDetails.amount,
+        note: expenseDetails.note,
+        category: expenseDetails.category || 'Others',
+        date: normalizedDate,
+      };
+      dispatch(updateExpenseHistory(payload));
+    } else {
+      const payload: ExpenseEntry = {
+        id: uuid.v4() as string,
+        amount: expenseDetails.amount,
+        note: expenseDetails.note,
+        category: expenseDetails.category || 'Others',
+        date: normalizedDate,
+      };
+      dispatch(addExpenseHistory(payload));
     }
+
+    closeAddExpenses();
   };
 
   return (
@@ -135,6 +195,7 @@ const AddUpdateExpenseScreen = ({navigation, route}: any) => {
             <AntDesign name="close" size={24} />
           </TouchableOpacity>
         </View>
+
         <TouchableOpacity onPress={() => setShowDetails(false)}>
           <AmountDisplay
             amount={expenseDetails.amount}
@@ -170,7 +231,11 @@ const AddUpdateExpenseScreen = ({navigation, route}: any) => {
 const getStyles = (colors: any) =>
   StyleSheet.create({
     container: {flex: 1, backgroundColor: '#fff', paddingTop: 20},
-    header: {flexDirection: 'row', justifyContent: 'space-between'},
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingVertical: 15,
+    },
     flexArea: {flexGrow: 1, justifyContent: 'flex-end'},
   });
 

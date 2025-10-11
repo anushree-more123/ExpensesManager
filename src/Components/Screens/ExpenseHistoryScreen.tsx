@@ -15,7 +15,9 @@ const ExpenseHistoryScreen = () => {
   const expenseHistory = useSelector(
     (state: RootState) => state.expenses.expenseHistory,
   );
-  const formattedHistory = getFormattedHistory(expenseHistory);
+  const {categoriesList} = useSelector((state: RootState) => state.expenses);
+
+  const formattedHistory = getFormattedHistory(expenseHistory, categoriesList);
 
   const renderItem = ({item}: any) => <TransactionItem item={item} />;
 
@@ -29,7 +31,7 @@ const ExpenseHistoryScreen = () => {
       .filter(entry => moment(entry.date).year() === currentYear)
       .reduce((acc: Record<string, {label: string; value: number}>, entry) => {
         const month = moment(entry.date).format('MMM');
-        const amount = parseFloat(entry.amount || '0');
+        const amount = parseFloat(String(entry.amount) || '0');
         if (!acc[month]) acc[month] = {label: month, value: 0};
         acc[month].value += isNaN(amount) ? 0 : amount;
         return acc;
@@ -39,7 +41,10 @@ const ExpenseHistoryScreen = () => {
   );
 
   const totalAmount = expenseHistory
-    .reduce((total, entry) => total + parseFloat(entry.amount || '0'), 0)
+    .reduce(
+      (total, entry) => total + parseFloat(String(entry.amount) || '0'),
+      0,
+    )
     .toFixed(2);
 
   return (
@@ -47,10 +52,11 @@ const ExpenseHistoryScreen = () => {
       <BarChartCard totalAmount={totalAmount} monthlyTotals={monthlyTotals} />
       <SectionList
         sections={formattedHistory}
-        keyExtractor={(item, index) => item.title + index}
+        keyExtractor={item => item.id}
         renderItem={renderItem}
         renderSectionHeader={renderSectionHeader}
         contentContainerStyle={styles.listContent}
+        stickySectionHeadersEnabled
       />
     </SafeAreaView>
   );
@@ -60,8 +66,14 @@ export default ExpenseHistoryScreen;
 
 const getStyles = (colors: any) =>
   StyleSheet.create({
-    container: {width: '100%', flex: 1, backgroundColor: colors.background},
-    listContent: {paddingHorizontal: 20, paddingBottom: 120},
+    container: {
+      width: '100%',
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    listContent: {
+      paddingHorizontal: 20,
+    },
     sectionHeader: {
       fontSize: 16,
       marginTop: 20,

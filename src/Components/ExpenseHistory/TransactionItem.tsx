@@ -1,38 +1,56 @@
-import {useNavigation} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
 import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
-import {useTheme} from 'react-native-paper';
-// @ts-ignore
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useTheme } from 'react-native-paper';
+import { StackNavigationProp } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/FontAwesome6';
-import {RootStackParamList} from '../Navigation/navigationTypes';
+import { useNavigation } from '@react-navigation/native';
+import { RootStackParamList } from '../Navigation/navigationTypes';
+import type { ExpenseEntry } from '../CreateExpenses/expensesSlice';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'UpdateExpenses'>;
+
+type DisplayItem = ExpenseEntry & {
+  icon: string;
+  color: string;
+  title: string;
+  subtitle: string;
+};
+
 interface TransactionItemProps {
-  item: any;
+  item: DisplayItem;
 }
 
-const TransactionItem: React.FC<TransactionItemProps> = ({item}) => {
+const TransactionItem: React.FC<TransactionItemProps> = ({ item }) => {
   const navigation = useNavigation<NavigationProp>();
-  const {colors} = useTheme();
+  const { colors } = useTheme();
   const styles = getStyles(colors);
+
+  const amount = parseFloat(item.amount || '0');
+
   return (
     <TouchableOpacity
-      onPress={() => {
+      onPress={() =>
         navigation.navigate('UpdateExpenses', {
-          expenseDetails: item,
-        });
-      }}>
+          expenseDetails: {
+            id: item.id,
+            amount: item.amount,
+            note: item.note ?? '',
+            date: item.date,
+            category: item.category,
+          },
+        })
+      }
+    >
       <View style={styles.transactionItem}>
-        <View style={[styles.iconWrapper, {backgroundColor: item.color}]}>
+        <View style={[styles.iconWrapper, { backgroundColor: item.color }]}>
           <Icon name={item.icon} size={18} color="#fff" />
         </View>
-        <View style={{flex: 1}}>
+        <View style={{ flex: 1 }}>
           <Text style={styles.transactionTitle}>{item.title}</Text>
           <Text style={styles.transactionSubtitle}>{item.subtitle}</Text>
         </View>
-        <View style={{alignItems: 'flex-end'}}>
-          <Text style={styles.transactionAmount}>₹{item.amount}</Text>
+        <View style={{ alignItems: 'flex-end' }}>
+          <Text style={styles.transactionAmount}>₹{amount.toFixed(2)}</Text>
         </View>
       </View>
     </TouchableOpacity>

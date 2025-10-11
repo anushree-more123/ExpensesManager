@@ -10,10 +10,12 @@ import {
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
-// @ts-ignore
 import Icon from 'react-native-vector-icons/FontAwesome6';
+import EntypoIcon from 'react-native-vector-icons/Entypo';
 import {Button, useTheme} from 'react-native-paper';
-import {categories} from '../Constants/categories';
+import {useSelector} from 'react-redux';
+import {RootState} from '../../Store/store';
+import {useNavigation} from '@react-navigation/native';
 
 interface ExpenseDetailsFormProps {
   expenseDetails: any;
@@ -32,48 +34,78 @@ const ExpenseDetailsForm: React.FC<ExpenseDetailsFormProps> = ({
   onChangeDate,
   onSave,
 }) => {
+  const navigation = useNavigation();
+  const {categoriesList} = useSelector((state: RootState) => state.expenses);
   const {colors} = useTheme();
   const styles = getStyles(colors);
+
+  const half = Math.ceil(categoriesList.length / 2);
+  const row1 = categoriesList.slice(0, half);
+  const row2 = categoriesList.slice(half);
+
   return (
     <View style={styles.detailsContainer}>
       <ScrollView>
-        <Text style={styles.sectionLabel}>Category</Text>
-        <View style={styles.categoryGrid}>
-          {categories.map(cat => (
-            <TouchableOpacity
-              key={cat.label}
-              style={[
-                styles.categoryButton,
-                expenseDetails.category === cat.label && {
-                  backgroundColor: cat.color,
-                },
-              ]}
-              onPress={() =>
-                setExpenseDetails((prev: any) => ({
-                  ...prev,
-                  category: cat.label,
-                }))
-              }>
-              <Icon
-                name={cat.icon}
-                size={24}
-                color={
-                  expenseDetails.category === cat.label ? '#fff' : cat.color
-                }
-              />
-              <Text
-                style={[
-                  styles.categoryLabel,
-                  {
-                    color:
-                      expenseDetails.category === cat.label ? '#fff' : '#000',
-                  },
-                ]}>
-                {cat.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.categoryTitleWrapper}>
+          <Text style={styles.sectionLabel}>Category</Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('CategoriesScreen')}>
+            <EntypoIcon
+              name="dots-three-vertical"
+              size={20}
+              style={styles.inputIcon}
+            />
+          </TouchableOpacity>
         </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.horizontalCategoryWrapper}>
+          <View style={styles.twoRowGrid}>
+            {[row1, row2].map((row, idx) => (
+              <View key={idx} style={styles.categoryRow}>
+                {row.map(cat => (
+                  <TouchableOpacity
+                    key={cat.label}
+                    style={[
+                      styles.categoryButton,
+                      expenseDetails.category === cat.label && {
+                        backgroundColor: cat.color,
+                      },
+                    ]}
+                    onPress={() =>
+                      setExpenseDetails((prev: any) => ({
+                        ...prev,
+                        category: cat.label,
+                      }))
+                    }>
+                    <Icon
+                      name={cat.icon}
+                      size={24}
+                      color={
+                        expenseDetails.category === cat.label
+                          ? '#fff'
+                          : cat.color
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.categoryLabel,
+                        {
+                          color:
+                            expenseDetails.category === cat.label
+                              ? '#fff'
+                              : '#000',
+                        },
+                      ]}>
+                      {cat.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ))}
+          </View>
+        </ScrollView>
 
         <Text style={styles.sectionLabel}>Details</Text>
         <TouchableOpacity onPress={() => setShowDatePicker(true)}>
@@ -133,29 +165,38 @@ const getStyles = (colors: any) =>
       paddingBottom: 80,
       paddingHorizontal: 20,
     },
+    categoryTitleWrapper: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
     sectionLabel: {
       fontSize: 16,
       marginBottom: 10,
       fontFamily: 'Roboto-Bold',
     },
-    categoryGrid: {
+    horizontalCategoryWrapper: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'space-between',
+    },
+    twoRowGrid: {
+      flexDirection: 'column',
+    },
+    categoryRow: {
+      flexDirection: 'row',
+      marginBottom: 10,
     },
     categoryButton: {
-      width: '32%',
+      width: 110,
+      height: 100,
       backgroundColor: '#eee',
-      padding: 10,
-      marginBottom: '2%',
       borderRadius: 8,
       alignItems: 'center',
-      height: 100,
       justifyContent: 'center',
+      marginRight: 10,
     },
     categoryLabel: {
       marginTop: 6,
       fontSize: 14,
+      textAlign: 'center',
       fontFamily: 'Roboto-Regular',
     },
     inputRow: {

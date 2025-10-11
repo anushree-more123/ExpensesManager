@@ -15,11 +15,12 @@ A modern **expense tracking app** built using **React Native**, allowing users t
 
 ## 🛠️ Tech Stack
 
-| Tech             | Description                         |
-| ---------------- | ----------------------------------- |
-| React Native     | Core framework for building the app |
-| Redux            | State management solution           |
-| JavaScript / JSX | UI and component logic              |
+| Tech          | Description                                       |
+| ------------- | ------------------------------------------------- |
+| React Native  | Core framework for building the app               |
+| Redux         | State management solution                         |
+| Redux Persist | Persist and rehydrate Redux state across sessions |
+| JavaScript    | Component logic                                   |
 
 ---
 
@@ -78,7 +79,7 @@ Follow these steps to set up and run the project:
 ## 🔐 Upcoming Features
 
 - 🔔 Expense reminders & notifications
-- 📈 Weekly and monthly expense analytics
+- 📈 Weekly, monthly and yearly expense analytics
 - ☁️ Cloud sync and login system
 - 🌐 Localization support
 

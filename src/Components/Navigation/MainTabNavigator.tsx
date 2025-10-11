@@ -9,6 +9,7 @@ import {useSelector} from 'react-redux';
 import {RootState} from '../../Store/store';
 import ExpenseHistoryScreen from '../Screens/ExpenseHistoryScreen';
 import ReportScreen from '../Screens/ReportScreen';
+import ProfileScreen from '../Screens/ProfileScreen';
 
 const tabs = [
   {key: 'overview', icon: 'house'},
@@ -20,7 +21,6 @@ const tabs = [
 
 const OverviewScreen = () => <Text>Overview Screen</Text>;
 const AnalyticsScreen = () => <Text>Analytics Screen</Text>;
-const ProfileScreen = () => <Text>Profile Screen</Text>;
 interface MainTabNavigatorProps {
   navigation: any;
   route: any;

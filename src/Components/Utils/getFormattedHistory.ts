@@ -1,73 +1,73 @@
-import {ExpenseEntry} from '../CreateExpenses/expensesSlice';
-import {categories} from '../Constants/categories';
+import { Categories, ExpenseEntry } from '../CreateExpenses/expensesSlice';
+
+type RowItem = ExpenseEntry & {
+  icon: string;
+  color: string;
+  title: string;
+  subtitle: string;
+};
 
 type SectionListData = {
   title: string;
-  data: {
-    icon: string;
-    color: string;
-    title: string;
-    subtitle: string;
-    amount: string;
-    id: string;
-    date: string;
-  }[];
+  data: RowItem[];
 };
 
 export const getFormattedHistory = (
-  expenseHistory: ExpenseEntry[],
+  expenseHistory: ExpenseEntry[], categoriesList: Categories[]
 ): SectionListData[] => {
-  const grouped: {
-    [date: string]: (SectionListData['data'][0] & {timestamp: number})[];
-  } = {};
+  const grouped: Record<string, (RowItem & { timestamp: number })[]> = {};
+
+  const now = new Date();
+  const currentYear = now.getFullYear();
 
   expenseHistory.forEach(entry => {
     const dateObj = new Date(entry.date);
-    const today = new Date();
 
-    const isToday =
-      dateObj.getDate() === today.getDate() &&
-      dateObj.getMonth() === today.getMonth() &&
-      dateObj.getFullYear() === today.getFullYear();
+    const sameDay =
+      dateObj.getDate() === now.getDate() &&
+      dateObj.getMonth() === now.getMonth() &&
+      dateObj.getFullYear() === now.getFullYear();
 
-    const formattedDate = isToday
+    const titleForSection = sameDay
       ? 'Today'
-      : dateObj.toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: 'short',
-        });
+      : dateObj.getFullYear() === currentYear
+        ? dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+        : dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
-    const categoryMeta = categories.find(c => c.label === entry.category) ?? {
+    const categoryMeta = categoriesList.find(c => c.label === entry.category) ?? {
       icon: 'question',
       color: '#ccc',
     };
 
-    if (!grouped[formattedDate]) grouped[formattedDate] = [];
-
-    grouped[formattedDate].push({
+    const row: RowItem & { timestamp: number } = {
+      id: entry.id,
+      amount: entry.amount,
+      note: entry.note ?? '',
+      date: entry.date,
+      category: entry.category,
       icon: categoryMeta.icon,
       color: categoryMeta.color,
       title: entry.note || entry.category,
       subtitle: entry.category,
-      amount: entry.amount,
       timestamp: dateObj.getTime(),
-      date: entry.date,
-      id: entry.id,
-    });
+    };
+
+    if (!grouped[titleForSection]) grouped[titleForSection] = [];
+    grouped[titleForSection].push(row);
   });
 
   return Object.entries(grouped)
-    .map(([title, rawData]) => ({
+    .map(([title, raw]) => ({
       title,
-      data: rawData
+      data: raw
         .sort((a, b) => b.timestamp - a.timestamp)
-        .map(({timestamp, ...rest}) => rest),
-      timestamp: rawData[0]?.timestamp ?? 0,
+        .map(({ timestamp, ...rest }) => rest),
+      sortKey: Math.max(...raw.map(r => r.timestamp)),
     }))
     .sort((a, b) => {
       if (a.title === 'Today') return -1;
       if (b.title === 'Today') return 1;
-      return b.timestamp - a.timestamp;
+      return b.sortKey - a.sortKey;
     })
-    .map(({timestamp, ...rest}) => rest);
+    .map(({ sortKey, ...rest }) => rest);
 };
