@@ -1,17 +1,23 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { PieChart } from 'react-native-gifted-charts';
-import { useTheme } from 'react-native-paper';
+import {View, Text, StyleSheet} from 'react-native';
+import {PieChart} from 'react-native-gifted-charts';
+import {useTheme} from 'react-native-paper';
 
 interface ReportSummaryChartProps {
-  pieData: { value: number; color: string; label: string }[];
+  pieData: {value: number; color: string; label: string}[];
   totalAmount: number;
 }
 
-const ReportSummaryChart: React.FC<ReportSummaryChartProps> = ({ pieData, totalAmount }) => {
-  const { colors } = useTheme();
+const ReportSummaryChart: React.FC<ReportSummaryChartProps> = ({
+  pieData,
+  totalAmount,
+}) => {
+  const {colors} = useTheme();
   const styles = getStyles(colors);
-
+  console.log('pieData', pieData);
+  if (!pieData || pieData.length === 0) {
+    return;
+  }
   return (
     <View style={styles.container}>
       {/* Pie Chart */}
@@ -37,7 +43,7 @@ const ReportSummaryChart: React.FC<ReportSummaryChartProps> = ({ pieData, totalA
       <View style={styles.legendWrapper}>
         {pieData.map((item, index) => (
           <View key={index} style={styles.legendItem}>
-            <View style={[styles.colorDot, { backgroundColor: item.color }]} />
+            <View style={[styles.colorDot, {backgroundColor: item.color}]} />
             <Text style={styles.legendText}>{item.label}</Text>
           </View>
         ))}
