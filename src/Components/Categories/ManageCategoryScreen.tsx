@@ -1,14 +1,15 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {View, StyleSheet, ScrollView, TouchableOpacity} from 'react-native';
-import {Button, Text, TextInput, useTheme} from 'react-native-paper';
+import {useDispatch, useSelector} from 'react-redux';
+import {Button, Text, TextInput} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/FontAwesome6';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {useDispatch, useSelector} from 'react-redux';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {setCategoryList} from '../CreateExpenses/expensesSlice';
 import type {RootState} from '../../Store/store';
 import type {Categories} from '../CreateExpenses/expensesSlice';
-import {useNavigation, useRoute} from '@react-navigation/native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {ColorMethods} from '../../theme/color.methods';
 
 type RouteParams = {mode: 'add'} | {mode: 'edit'; index: number};
 
@@ -81,18 +82,18 @@ const ICON_CHOICES = [
 ];
 
 const COLOR_PALETTE = [
-  '#6BC16B',
-  '#FF5C5C',
-  '#5BB3FF',
-  '#7B1FA2',
-  '#FF9A3E',
-  '#9E9E9E',
-  '#FF7043',
-  '#81C784',
-  '#4FC3F7',
-  '#FF2C2C',
-  '#5A5A5A',
-  '#7C4DFF',
+  ColorMethods.GetColorFromColorCode('category_1'),
+  ColorMethods.GetColorFromColorCode('category_2'),
+  ColorMethods.GetColorFromColorCode('category_3'),
+  ColorMethods.GetColorFromColorCode('category_4'),
+  ColorMethods.GetColorFromColorCode('category_5'),
+  ColorMethods.GetColorFromColorCode('category_6'),
+  ColorMethods.GetColorFromColorCode('category_7'),
+  ColorMethods.GetColorFromColorCode('category_8'),
+  ColorMethods.GetColorFromColorCode('category_9'),
+  ColorMethods.GetColorFromColorCode('category_10'),
+  ColorMethods.GetColorFromColorCode('category_11'),
+  ColorMethods.GetColorFromColorCode('category_12'),
 ];
 
 const ManageCategoryScreen: React.FC = () => {
@@ -101,9 +102,7 @@ const ManageCategoryScreen: React.FC = () => {
   const params = route.params as RouteParams;
 
   const dispatch = useDispatch();
-  const {colors} = useTheme();
   const insets = useSafeAreaInsets();
-  const styles = getStyles(colors);
 
   const {categoriesList} = useSelector((s: RootState) => s.expenses);
 
@@ -153,35 +152,47 @@ const ManageCategoryScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>
+    <View style={Styles.container}>
+      <View style={Styles.header}>
+        <Text style={Styles.headerTitle}>
           {isEdit ? 'Edit Category' : 'Add Category'}
         </Text>
-        <View style={styles.headerRight}>
+        <View style={Styles.headerRight}>
           {isEdit && (
             <TouchableOpacity onPress={handleDelete}>
-              <AntDesign name="delete" size={24} color={'red'} />
+              <AntDesign
+                name="delete"
+                size={24}
+                color={ColorMethods.GetColorFromColorCode('red_600')}
+              />
             </TouchableOpacity>
           )}
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <AntDesign name="close" size={24} />
+            <AntDesign
+              name="close"
+              size={24}
+              color={ColorMethods.GetColorFromColorCode('slate_500')}
+            />
           </TouchableOpacity>
         </View>
       </View>
 
       <ScrollView
         contentContainerStyle={[
-          styles.content,
+          Styles.content,
           {paddingBottom: insets.bottom + 50},
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
-        <View style={styles.previewRow}>
-          <View style={[styles.previewCircle, {backgroundColor: color}]}>
-            <Icon name={icon} size={24} color="#fff" />
+        <View style={Styles.previewRow}>
+          <View style={[Styles.previewCircle, {backgroundColor: color}]}>
+            <Icon
+              name={icon}
+              size={24}
+              color={ColorMethods.GetColorFromColorCode('slate_20')}
+            />
           </View>
-          <Text style={styles.previewLabel}>{label || 'Category'}</Text>
+          <Text style={Styles.previewLabel}>{label || 'Category'}</Text>
         </View>
 
         <TextInput
@@ -189,28 +200,36 @@ const ManageCategoryScreen: React.FC = () => {
           label="Label"
           value={label}
           onChangeText={setLabel}
-          style={styles.input}
+          style={Styles.input}
         />
 
-        <Text style={styles.sectionTitle}>Choose Icon</Text>
-        <View style={styles.iconGrid}>
+        <Text style={Styles.sectionTitle}>Choose Icon</Text>
+        <View style={Styles.iconGrid}>
           {ICON_CHOICES.map(ic => {
             const selected = ic === icon;
             return (
               <TouchableOpacity
                 key={ic}
-                style={[styles.iconCell, selected && styles.iconCellSelected]}
+                style={[Styles.iconCell, selected && Styles.iconCellSelected]}
                 activeOpacity={0.8}
                 onPress={() => setIcon(ic)}>
                 <View
                   style={[
-                    styles.iconCircleSmall,
-                    selected && {backgroundColor: color},
+                    Styles.iconCircleSmall,
+                    {
+                      backgroundColor: selected
+                        ? color
+                        : ColorMethods.GetColorFromColorCode('slate_200'),
+                    },
                   ]}>
                   <Icon
                     name={ic}
                     size={22}
-                    color={selected ? '#fff' : '#000'}
+                    color={
+                      selected
+                        ? ColorMethods.GetColorFromColorCode('slate_20')
+                        : ColorMethods.GetColorFromColorCode('slate_600')
+                    }
                   />
                 </View>
               </TouchableOpacity>
@@ -218,8 +237,8 @@ const ManageCategoryScreen: React.FC = () => {
           })}
         </View>
 
-        <Text style={styles.sectionTitle}>Choose Color</Text>
-        <View style={styles.colorRow}>
+        <Text style={Styles.sectionTitle}>Choose Color</Text>
+        <View style={Styles.colorRow}>
           {COLOR_PALETTE.map(c => {
             const selected = c === color;
             return (
@@ -227,9 +246,9 @@ const ManageCategoryScreen: React.FC = () => {
                 key={c}
                 onPress={() => setColor(c)}
                 style={[
-                  styles.colorSwatch,
+                  Styles.colorSwatch,
                   {backgroundColor: c},
-                  selected && styles.colorSwatchSelected,
+                  selected && Styles.colorSwatchSelected,
                 ]}
                 activeOpacity={0.85}
               />
@@ -247,15 +266,17 @@ const ManageCategoryScreen: React.FC = () => {
           paddingTop: 8,
           paddingHorizontal: 16,
           paddingBottom: insets.bottom + 8,
-          backgroundColor: colors.background,
+          backgroundColor: ColorMethods.GeSecondarytColorFromColorCode(
+            'pageBackgroundColor',
+          ),
           borderTopWidth: StyleSheet.hairlineWidth,
-          borderTopColor: colors.outlineVariant ?? 'rgba(0,0,0,0.12)',
+          borderTopColor: ColorMethods.GetColorFromColorCode('slate_200'),
         }}>
         <Button
           mode="contained"
           onPress={handleSave}
           disabled={!canSave || saving}
-          style={canSave ? styles.saveButton : styles.disabledSaveButton}
+          style={canSave ? Styles.saveButton : Styles.disabledSaveButton}
           contentStyle={{paddingVertical: 5}}
           labelStyle={{fontSize: 16}}>
           {saving ? 'Saving…' : 'Save'}
@@ -267,102 +288,109 @@ const ManageCategoryScreen: React.FC = () => {
 
 export default ManageCategoryScreen;
 
-const getStyles = (colors: any) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      paddingHorizontal: 15,
-      paddingVertical: 15,
-      paddingBottom: 20,
-      backgroundColor: colors.background,
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      paddingVertical: 15,
-    },
-    headerRight: {
-      flexDirection: 'row',
-      gap: 20,
-    },
-    headerTitle: {
-      fontSize: 18,
-      fontWeight: 600,
-    },
-    content: {},
-    previewRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 16,
-      gap: 12,
-    },
-    previewCircle: {
-      width: 46,
-      height: 46,
-      borderRadius: 23,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    previewLabel: {fontSize: 18, fontWeight: '600'},
-    input: {marginBottom: 16},
+const Styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 15,
+    paddingVertical: 15,
+    paddingBottom: 20,
+    backgroundColor: ColorMethods.GeSecondarytColorFromColorCode(
+      'pageBackgroundColor',
+    ),
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 15,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    gap: 20,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 600,
+    color: ColorMethods.GeSecondarytColorFromColorCode('primaryFontColor'),
+  },
+  content: {},
+  previewRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 12,
+  },
+  previewCircle: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: ColorMethods.GeSecondarytColorFromColorCode('primaryFontColor'),
+  },
+  input: {
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: ColorMethods.GeSecondarytColorFromColorCode('primaryFontColor'),
+  },
 
-    sectionTitle: {
-      fontSize: 14,
-      fontWeight: '600',
-      marginBottom: 8,
-      color: colors.onSurface,
-    },
-
-    iconGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'space-between',
-      gap: 4,
-      marginBottom: 16,
-    },
-    iconCell: {
-      width: 60,
-      height: 60,
-      borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.outlineVariant ?? 'rgba(0,0,0,0.12)',
-      backgroundColor: colors.surface,
-    },
-    iconCellSelected: {
-      borderWidth: 2,
-      borderColor: colors.primary,
-    },
-    iconCircleSmall: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    colorRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 8,
-      marginBottom: 24,
-    },
-    colorSwatch: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      borderWidth: 2,
-      borderColor: 'transparent',
-    },
-    colorSwatchSelected: {
-      borderColor: colors.onSurface,
-    },
-    saveButton: {
-      borderRadius: 8,
-      backgroundColor: colors['700'],
-    },
-    disabledSaveButton: {
-      borderRadius: 8,
-      backgroundColor: colors['300'],
-    },
-  });
+  iconGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 4,
+    marginBottom: 16,
+  },
+  iconCell: {
+    width: 60,
+    height: 60,
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: ColorMethods.GetColorFromColorCode('slate_300'),
+    backgroundColor: ColorMethods.GetColorFromColorCode('slate_200'),
+  },
+  iconCellSelected: {
+    borderWidth: 2,
+    borderColor: ColorMethods.GetColorFromColorCode('purple_700'),
+  },
+  iconCircleSmall: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 36,
+    height: 36,
+    borderRadius: 99,
+  },
+  colorRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 24,
+  },
+  colorSwatch: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  colorSwatchSelected: {
+    borderColor: ColorMethods.GetColorFromColorCode('slate_500'),
+  },
+  saveButton: {
+    borderRadius: 2,
+    backgroundColor: ColorMethods.GetColorFromColorCode('purple_500'),
+  },
+  disabledSaveButton: {
+    borderRadius: 2,
+    backgroundColor: ColorMethods.GetColorFromColorCode('purple_200'),
+  },
+});

@@ -9,28 +9,28 @@ const AppLoaded = () => {
   const [isDone, setIsDone] = useState(false);
   const {expenseHistory} = useSelector((state: RootState) => state.expenses);
 
-   useEffect(() => {
-    const checkIntroStatus = async () => {
-      try {
-        const introStatus = await AsyncStorage.getItem('intro_done');
-        setIsDone(introStatus === 'true'); 
-      } catch (error) {
-        console.error('Error reading intro status from AsyncStorage:', error);
-        setIsDone(false); 
-      }
-    };
+  //  useEffect(() => {
+  //   const checkIntroStatus = async () => {
+  //     try {
+  //       const introStatus = await AsyncStorage.getItem('intro_done');
+  //       setIsDone(introStatus === 'true');
+  //     } catch (error) {
+  //       console.error('Error reading intro status from AsyncStorage:', error);
+  //       setIsDone(false);
+  //     }
+  //   };
 
-    checkIntroStatus();
-  }, []);
+  //   checkIntroStatus();
+  // }, []);
 
   const handleDone = async () => {
-      try {
-        await AsyncStorage.setItem('intro_done', 'true'); 
-       setIsDone(true)
-      } catch (error) {
-        console.error('Error saving intro status to AsyncStorage:', error);
-      }
-    };
+    try {
+      await AsyncStorage.setItem('intro_done', 'true');
+      setIsDone(true);
+    } catch (error) {
+      console.error('Error saving intro status to AsyncStorage:', error);
+    }
+  };
 
   return !isDone && expenseHistory.length === 0 ? (
     <AppIntroSlides onDone={handleDone} />

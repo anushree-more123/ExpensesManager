@@ -1,9 +1,9 @@
 import React from 'react';
-import {StyleSheet, View, TouchableOpacity} from 'react-native';
+import {StyleSheet, TouchableOpacity} from 'react-native';
 import Svg, {Defs, LinearGradient, Stop, Path} from 'react-native-svg';
-// @ts-ignore
 import Icon from 'react-native-vector-icons/FontAwesome6';
 import {useTheme} from 'react-native-paper';
+import {ColorMethods} from '../../theme/color.methods';
 
 const HexagonFAB = ({onPress}: {onPress: () => void}) => {
   const {colors} = useTheme();
@@ -13,20 +13,32 @@ const HexagonFAB = ({onPress}: {onPress: () => void}) => {
       <Svg height="76" width="76" viewBox="0 0 100 100" style={styles.hexagon}>
         <Defs>
           <LinearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0%" stopColor="#B983FF" stopOpacity="1" />
-            <Stop offset="100%" stopColor={colors['700']} stopOpacity="1" />
+            <Stop
+              offset="0%"
+              stopColor={ColorMethods.GetColorFromColorCode('purple_200')}
+              stopOpacity="1"
+            />
+            <Stop
+              offset="100%"
+              stopColor={ColorMethods.GetColorFromColorCode('purple_600')}
+              stopOpacity="1"
+            />
           </LinearGradient>
         </Defs>
         <Path
           d="M50 5 L90 27 L90 72 L50 95 L10 72 L10 27 Z"
           fill="url(#grad)"
-          stroke={colors['100']}
+          stroke={ColorMethods.GetColorFromColorCode('purple_50')}
           strokeWidth="1.5"
           strokeLinejoin="round"
         />
       </Svg>
 
-      <Icon name="plus" size={20} color="#fff" />
+      <Icon
+        name="plus"
+        size={20}
+        color={ColorMethods.GetColorFromColorCode('slate_20')}
+      />
     </TouchableOpacity>
   );
 };

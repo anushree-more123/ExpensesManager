@@ -10,6 +10,7 @@ import {RootState} from '../../Store/store';
 import ExpenseHistoryScreen from '../Screens/ExpenseHistoryScreen';
 import ReportScreen from '../Screens/ReportScreen';
 import ProfileScreen from '../Screens/ProfileScreen';
+import {ColorMethods} from '../../theme/color.methods';
 
 const tabs = [
   {key: 'overview', icon: 'house'},
@@ -72,7 +73,11 @@ const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
               <Icon
                 name={tab.icon}
                 size={20}
-                color={activeTab === tab.key ? colors.primary : '#A1A0B2'}
+                color={
+                  activeTab === tab.key
+                    ? ColorMethods.GetColorFromColorCode('purple_300')
+                    : ColorMethods.GetColorFromColorCode('slate_300')
+                }
               />
             </TouchableOpacity>
           ),

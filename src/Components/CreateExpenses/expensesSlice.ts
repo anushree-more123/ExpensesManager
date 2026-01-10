@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { ColorMethods } from '../../theme/color.methods';
 
 export type ExpenseEntry = {
   id: string;
@@ -22,12 +23,12 @@ export type ExpensesState = {
 const initialState: ExpensesState = {
   expenseHistory: [],
   categoriesList: [
-    { label: 'Food and Drinks', icon: 'pizza-slice', color: '#FF7043', },
-    { label: 'Leisure', icon: 'face-smile-wink', color: '#81C784' },
-    { label: 'Transportation', icon: 'bus', color: '#4FC3F7' },
-    { label: 'Health', icon: 'hand-holding-medical', color: '#FF2C2C' },
-    { label: 'Shopping', icon: 'cart-shopping', color: '#7B1FA2' },
-    { label: 'Utilities', icon: 'screwdriver-wrench', color: '#5A5A5A' },
+    { label: 'Food and Drinks', icon: 'pizza-slice', color: ColorMethods.GetColorFromColorCode('food_and_drinks') },
+    { label: 'Leisure', icon: 'face-smile-wink', color: ColorMethods.GetColorFromColorCode('leisure') },
+    { label: 'Transportation', icon: 'bus', color: ColorMethods.GetColorFromColorCode('transportation') },
+    { label: 'Health', icon: 'hand-holding-medical', color: ColorMethods.GetColorFromColorCode('health') },
+    { label: 'Shopping', icon: 'cart-shopping', color: ColorMethods.GetColorFromColorCode('shopping') },
+    { label: 'Utilities', icon: 'screwdriver-wrench', color: ColorMethods.GetColorFromColorCode('utilities') },
   ]
 };
 

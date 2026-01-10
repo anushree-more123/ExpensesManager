@@ -1,9 +1,10 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {View, TouchableOpacity, StyleSheet, Platform} from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {useTheme} from 'react-native-paper';
 import {useDispatch} from 'react-redux';
 import uuid from 'react-native-uuid';
+import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
 import {
   addExpenseHistory,
   updateExpenseHistory,
@@ -12,10 +13,8 @@ import {
 import AmountDisplay from '../CreateExpenses/AmountDisplay';
 import CalculatorKeyboard from '../CreateExpenses/CalculatorKeyboard';
 import ExpenseDetailsForm from '../CreateExpenses/ExpenseDetailsForm';
-
-import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../Navigation/RootStackParamList';
+import {ColorMethods} from '../../theme/color.methods';
 
 type Nav = StackNavigationProp<
   RootStackParamList,
@@ -28,12 +27,11 @@ type ExpenseDetailsState = Omit<ExpenseEntry, 'id' | 'date'> & {
   date: Date | string;
 };
 
-// Accept both shapes for backward-compat:
 type LegacyExpenseParam = {
   id: string;
   amount: string;
-  title: string; // maps to note
-  subtitle: string; // maps to category
+  title: string;
+  subtitle: string;
   date: string;
 };
 
@@ -41,7 +39,6 @@ function normalizeFromRouteParam(
   e?: ExpenseEntry | LegacyExpenseParam,
 ): ExpenseDetailsState | null {
   if (!e) return null;
-  // Legacy shape (title/subtitle)
   if ('title' in e && 'subtitle' in e) {
     return {
       id: e.id,
@@ -51,7 +48,6 @@ function normalizeFromRouteParam(
       date: e.date,
     };
   }
-  // Proper ExpenseEntry
   return {
     id: e.id,
     amount: e.amount ?? '',
@@ -66,8 +62,6 @@ const AddUpdateExpenseScreen: React.FC = () => {
   const route = useRoute<Rte>();
 
   const dispatch = useDispatch();
-  const {colors} = useTheme();
-  const styles = getStyles(colors);
 
   const initialState: ExpenseDetailsState = useMemo(
     () => ({
@@ -104,7 +98,6 @@ const AddUpdateExpenseScreen: React.FC = () => {
       try {
         const cleanAmount = expenseDetails.amount.replace(/[-*+/\.]+$/, '');
         if (cleanAmount !== '') {
-          // NOTE: you already use eval; kept it as-is
           const result = eval(cleanAmount);
           if (!isNaN(result)) {
             setExpenseDetails(prev => ({
@@ -188,11 +181,15 @@ const AddUpdateExpenseScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={{paddingHorizontal: 20}}>
-        <View style={styles.header}>
+    <View style={Styles.container}>
+      <View style={Styles.headerContainer}>
+        <View style={Styles.header}>
           <TouchableOpacity onPress={closeAddExpenses}>
-            <AntDesign name="close" size={24} />
+            <AntDesign
+              name="close"
+              size={24}
+              color={ColorMethods.GetColorFromColorCode('slate_500')}
+            />
           </TouchableOpacity>
         </View>
 
@@ -210,7 +207,7 @@ const AddUpdateExpenseScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.flexArea}>
+      <View style={Styles.flexArea}>
         {!showDetails ? (
           <CalculatorKeyboard onKeyPress={handleKeyPress} />
         ) : (
@@ -228,15 +225,21 @@ const AddUpdateExpenseScreen: React.FC = () => {
   );
 };
 
-const getStyles = (colors: any) =>
-  StyleSheet.create({
-    container: {flex: 1, backgroundColor: '#fff', paddingTop: 20},
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      paddingVertical: 15,
-    },
-    flexArea: {flexGrow: 1, justifyContent: 'flex-end'},
-  });
+const Styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: ColorMethods.GeSecondarytColorFromColorCode(
+      'pageBackgroundColor',
+    ),
+    paddingTop: 20,
+  },
+  headerContainer: {paddingHorizontal: 20},
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 15,
+  },
+  flexArea: {flexGrow: 1, justifyContent: 'flex-end'},
+});
 
 export default AddUpdateExpenseScreen;

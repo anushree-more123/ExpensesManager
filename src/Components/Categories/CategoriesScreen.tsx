@@ -7,6 +7,7 @@ import {useNavigation} from '@react-navigation/native';
 import {useSelector} from 'react-redux';
 import type {RootState} from '../../Store/store';
 import type {Categories} from '../CreateExpenses/expensesSlice';
+import {ColorMethods} from '../../theme/color.methods';
 
 const CategoriesScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -27,11 +28,19 @@ const CategoriesScreen: React.FC = () => {
     <TouchableOpacity activeOpacity={0.7} onPress={() => openEdit(index)}>
       <View style={styles.row}>
         <View style={[styles.iconCircle, {backgroundColor: item.color}]}>
-          <Icon name={item.icon || 'circle'} size={18} color="#fff" />
+          <Icon
+            name={item.icon || 'circle'}
+            size={18}
+            color={ColorMethods.GetColorFromColorCode('slate_20')}
+          />
         </View>
         <Text style={styles.label}>{item.label}</Text>
         <View style={{flex: 1}} />
-        <Icon name="bars" size={16} color={colors.onSurfaceVariant || '#777'} />
+        <Icon
+          name="bars"
+          size={16}
+          color={ColorMethods.GetColorFromColorCode('slate_500')}
+        />
       </View>
     </TouchableOpacity>
   );
@@ -49,7 +58,11 @@ const CategoriesScreen: React.FC = () => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Categories</Text>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <AntDesign name="close" size={24} />
+          <AntDesign
+            name="close"
+            size={24}
+            color={ColorMethods.GetColorFromColorCode('slate_500')}
+          />
         </TouchableOpacity>
       </View>
 

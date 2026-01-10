@@ -2,6 +2,7 @@
 
 import {Text, View, StyleSheet} from 'react-native';
 import {useTheme} from 'react-native-paper';
+import {ColorMethods} from '../../theme/color.methods';
 
 const WelcomeScreen = () => {
   const {colors} = useTheme();
@@ -36,13 +37,13 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#333',
+    color: ColorMethods.GeSecondarytColorFromColorCode('secondaryFontColor'),
     textAlign: 'left',
     lineHeight: 24,
     fontFamily: 'Roboto-regular',
   },
   plus: {
     fontWeight: 'bold',
-    color: '#566DFB',
+    color: ColorMethods.GetColorFromColorCode('purple_50'),
   },
 });

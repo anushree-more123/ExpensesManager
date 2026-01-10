@@ -12,10 +12,11 @@ import DateTimePicker, {
 } from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/FontAwesome6';
 import EntypoIcon from 'react-native-vector-icons/Entypo';
-import {Button, useTheme} from 'react-native-paper';
+import {Button} from 'react-native-paper';
+import {useNavigation} from '@react-navigation/native';
 import {useSelector} from 'react-redux';
 import {RootState} from '../../Store/store';
-import {useNavigation} from '@react-navigation/native';
+import {ColorMethods} from '../../theme/color.methods';
 
 interface ExpenseDetailsFormProps {
   expenseDetails: any;
@@ -36,39 +37,37 @@ const ExpenseDetailsForm: React.FC<ExpenseDetailsFormProps> = ({
 }) => {
   const navigation = useNavigation();
   const {categoriesList} = useSelector((state: RootState) => state.expenses);
-  const {colors} = useTheme();
-  const styles = getStyles(colors);
 
   const half = Math.ceil(categoriesList.length / 2);
   const row1 = categoriesList.slice(0, half);
   const row2 = categoriesList.slice(half);
 
   return (
-    <View style={styles.detailsContainer}>
+    <View style={Styles.detailsContainer}>
       <ScrollView>
-        <View style={styles.categoryTitleWrapper}>
-          <Text style={styles.sectionLabel}>Category</Text>
+        <View style={Styles.categoryTitleWrapper}>
+          <Text style={Styles.sectionLabel}>Category</Text>
           <TouchableOpacity
             onPress={() => navigation.navigate('CategoriesScreen')}>
             <EntypoIcon
               name="dots-three-vertical"
               size={20}
-              style={styles.inputIcon}
+              style={Styles.inputIcon}
             />
           </TouchableOpacity>
         </View>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.horizontalCategoryWrapper}>
-          <View style={styles.twoRowGrid}>
+          contentContainerStyle={Styles.horizontalCategoryWrapper}>
+          <View style={Styles.twoRowGrid}>
             {[row1, row2].map((row, idx) => (
-              <View key={idx} style={styles.categoryRow}>
+              <View key={idx} style={Styles.categoryRow}>
                 {row.map(cat => (
                   <TouchableOpacity
                     key={cat.label}
                     style={[
-                      styles.categoryButton,
+                      Styles.categoryButton,
                       expenseDetails.category === cat.label && {
                         backgroundColor: cat.color,
                       },
@@ -84,18 +83,20 @@ const ExpenseDetailsForm: React.FC<ExpenseDetailsFormProps> = ({
                       size={24}
                       color={
                         expenseDetails.category === cat.label
-                          ? '#fff'
+                          ? ColorMethods.GetColorFromColorCode('slate_200')
                           : cat.color
                       }
                     />
                     <Text
                       style={[
-                        styles.categoryLabel,
+                        Styles.categoryLabel,
                         {
                           color:
                             expenseDetails.category === cat.label
-                              ? '#fff'
-                              : '#000',
+                              ? ColorMethods.GetColorFromColorCode('slate_20')
+                              : ColorMethods.GeSecondarytColorFromColorCode(
+                                  'secondaryFontColor',
+                                ),
                         },
                       ]}>
                       {cat.label}
@@ -107,11 +108,11 @@ const ExpenseDetailsForm: React.FC<ExpenseDetailsFormProps> = ({
           </View>
         </ScrollView>
 
-        <Text style={styles.sectionLabel}>Details</Text>
+        <Text style={Styles.sectionLabel}>Details</Text>
         <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-          <View style={styles.inputRow}>
-            <Icon name="calendar" size={20} style={styles.inputIcon} />
-            <Text style={styles.input}>
+          <View style={Styles.inputRow}>
+            <Icon name="calendar" size={20} style={Styles.inputIcon} />
+            <Text style={Styles.input}>
               {typeof expenseDetails.date === 'string'
                 ? new Date(expenseDetails.date).toDateString()
                 : expenseDetails.date.toDateString()}
@@ -119,15 +120,15 @@ const ExpenseDetailsForm: React.FC<ExpenseDetailsFormProps> = ({
           </View>
         </TouchableOpacity>
 
-        <View style={styles.inputRow}>
-          <Icon name="sticky-note" size={20} style={styles.inputIcon} />
+        <View style={Styles.inputRow}>
+          <Icon name="sticky-note" size={20} style={Styles.inputIcon} />
           <TextInput
             placeholder="Add a note..."
             value={expenseDetails.note}
             onChangeText={text =>
               setExpenseDetails((prev: any) => ({...prev, note: text}))
             }
-            style={styles.input}
+            style={Styles.input}
           />
         </View>
 
@@ -148,7 +149,7 @@ const ExpenseDetailsForm: React.FC<ExpenseDetailsFormProps> = ({
       <Button
         mode="contained"
         onPress={onSave}
-        style={styles.saveButton}
+        style={Styles.saveButton}
         contentStyle={{paddingVertical: 8}}
         labelStyle={{fontSize: 16}}>
         Save Expense
@@ -157,66 +158,70 @@ const ExpenseDetailsForm: React.FC<ExpenseDetailsFormProps> = ({
   );
 };
 
-const getStyles = (colors: any) =>
-  StyleSheet.create({
-    detailsContainer: {
-      flexGrow: 1,
-      paddingTop: 30,
-      paddingBottom: 80,
-      paddingHorizontal: 20,
-    },
-    categoryTitleWrapper: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-    },
-    sectionLabel: {
-      fontSize: 16,
-      marginBottom: 10,
-      fontFamily: 'Roboto-Bold',
-    },
-    horizontalCategoryWrapper: {
-      flexDirection: 'row',
-    },
-    twoRowGrid: {
-      flexDirection: 'column',
-    },
-    categoryRow: {
-      flexDirection: 'row',
-      marginBottom: 10,
-    },
-    categoryButton: {
-      width: 110,
-      height: 100,
-      backgroundColor: '#eee',
-      borderRadius: 8,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginRight: 10,
-    },
-    categoryLabel: {
-      marginTop: 6,
-      fontSize: 14,
-      textAlign: 'center',
-      fontFamily: 'Roboto-Regular',
-    },
-    inputRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      borderBottomWidth: 1,
-      marginBottom: 20,
-    },
-    inputIcon: {marginRight: 8, color: '#555'},
-    input: {
-      flex: 1,
-      fontSize: 16,
-      paddingVertical: 8,
-      fontFamily: 'Roboto-Regular',
-    },
-    saveButton: {
-      marginTop: 20,
-      borderRadius: 8,
-      backgroundColor: colors['700'],
-    },
-  });
+const Styles = StyleSheet.create({
+  detailsContainer: {
+    flexGrow: 1,
+    paddingTop: 30,
+    paddingBottom: 80,
+    paddingHorizontal: 20,
+  },
+  categoryTitleWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  sectionLabel: {
+    fontSize: 16,
+    marginBottom: 10,
+    fontFamily: 'Roboto-Bold',
+  },
+  horizontalCategoryWrapper: {
+    flexDirection: 'row',
+  },
+  twoRowGrid: {
+    flexDirection: 'column',
+  },
+  categoryRow: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  categoryButton: {
+    width: 110,
+    height: 100,
+    backgroundColor: ColorMethods.GetColorFromColorCode('slate_200'),
+    borderWidth: 0.5,
+    borderColor: ColorMethods.GetColorFromColorCode('slate_100'),
+    borderRadius: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  categoryLabel: {
+    marginTop: 6,
+    fontSize: 14,
+    textAlign: 'center',
+    fontFamily: 'Roboto-Regular',
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    marginBottom: 20,
+  },
+  inputIcon: {
+    marginRight: 8,
+    color: ColorMethods.GetColorFromColorCode('slate_500'),
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 8,
+    fontFamily: 'Roboto-Regular',
+  },
+  saveButton: {
+    marginTop: 20,
+    borderRadius: 6,
+    backgroundColor: ColorMethods.GetColorFromColorCode('purple_300'),
+  },
+});
 
 export default ExpenseDetailsForm;
