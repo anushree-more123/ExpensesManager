@@ -1,19 +1,14 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, {useMemo, useState} from 'react';
+import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import moment from 'moment';
-import { useSelector } from 'react-redux';
-import { useTheme } from 'react-native-paper';
-import { RootState } from '../../Store/store';
-import { Period } from '../ReportAnalytics/ReportAnalyticsType';
+import {useSelector} from 'react-redux';
+import {useTheme} from 'react-native-paper';
+import {RootState} from '../../Store/store';
+import {Period} from '../ReportAnalytics/ReportAnalyticsType';
 import ReportSummaryChart from '../ReportAnalytics/ReportSummaryChart';
 import ReportList from '../ReportAnalytics/ReportList';
 import DurationTab from '../ReportAnalytics/DurationTab';
 
-interface Category {
-  label: string;
-  icon: string;
-  color: string;
-}
 interface ExpenseEntry {
   category: string;
   amount: string;
@@ -21,12 +16,14 @@ interface ExpenseEntry {
 }
 
 const ReportScreen: React.FC = () => {
-  const { colors } = useTheme();
+  const {colors} = useTheme();
   const styles = getStyles(colors);
 
-  const expenseHistory = useSelector((state: RootState) => state.expenses.expenseHistory);
-    const {categoriesList} = useSelector((state: RootState)=> state.expenses)
-  
+  const expenseHistory = useSelector(
+    (state: RootState) => state.expenses.expenseHistory,
+  );
+  const {categoriesList} = useSelector((state: RootState) => state.expenses);
+
   const [period, setPeriod] = useState<Period>('Monthly');
 
   const currentMonth = moment().month();
@@ -34,16 +31,20 @@ const ReportScreen: React.FC = () => {
   const currentWeek = moment().week();
 
   const groupByCategory = (data: ExpenseEntry[]) => {
-    const grouped: { [key: string]: ExpenseEntry[] } = {};
-    data.forEach((entry) => {
+    const grouped: {[key: string]: ExpenseEntry[]} = {};
+    data.forEach(entry => {
       const entryDate = moment(entry.date);
       let periodMatch = false;
       switch (period) {
         case 'Monthly':
-          periodMatch = entryDate.month() === currentMonth && entryDate.year() === currentYear;
+          periodMatch =
+            entryDate.month() === currentMonth &&
+            entryDate.year() === currentYear;
           break;
         case 'Weekly':
-          periodMatch = entryDate.week() === currentWeek && entryDate.year() === currentYear;
+          periodMatch =
+            entryDate.week() === currentWeek &&
+            entryDate.year() === currentYear;
           break;
         case 'Yearly':
           periodMatch = entryDate.year() === currentYear;
@@ -57,25 +58,32 @@ const ReportScreen: React.FC = () => {
     return grouped;
   };
 
-  const groupedData = useMemo(() => groupByCategory(expenseHistory), [expenseHistory, period]);
+  const groupedData = useMemo(
+    () => groupByCategory(expenseHistory),
+    [expenseHistory, period],
+  );
 
   const pieData = useMemo(
     () =>
-      Object.keys(groupedData).map((key) => {
-        const total = groupedData[key].reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
-        const categoryMeta = categoriesList.find((c) => c.label === key);
+      Object.keys(groupedData).map(key => {
+        const total = groupedData[key].reduce(
+          (sum, e) => sum + parseFloat(e.amount || '0'),
+          0,
+        );
+        const categoryMeta = categoriesList.find(c => c.label === key);
         return {
           value: total,
           color: categoryMeta?.color || colors['500'],
           label: key,
         };
       }),
-    [groupedData]
+    [groupedData],
   );
 
   const totalAmount = pieData.reduce(
-    (sum, p) => sum + (typeof p.value === 'number' && !isNaN(p.value) ? p.value : 0),
-    0
+    (sum, p) =>
+      sum + (typeof p.value === 'number' && !isNaN(p.value) ? p.value : 0),
+    0,
   );
 
   const getPeriodLabel = () => {
@@ -106,7 +114,7 @@ const ReportScreen: React.FC = () => {
         <ReportSummaryChart pieData={pieData} totalAmount={totalAmount} />
       </View>
 
-      <ReportList data={pieData} groupedData={groupedData}  />
+      <ReportList data={pieData} groupedData={groupedData} />
     </View>
   );
 };
@@ -115,8 +123,8 @@ export default ReportScreen;
 
 const getStyles = (colors: any) =>
   StyleSheet.create({
-    container: { flex: 1, width: '100%', backgroundColor: colors.background },
-    listContent: { padding: 20, paddingBottom: 120 },
+    container: {flex: 1, width: '100%', backgroundColor: colors.background},
+    listContent: {padding: 20, paddingBottom: 120},
 
     headerCard: {
       margin: 16,

@@ -1,6 +1,6 @@
 # 💸 Expense Manager App (React Native)
 
-A modern **expense tracking app** built using **React Native**, allowing users to manage their personal finances efficiently.
+A modern **expense tracking app** built using **React Native**, allowing users to manage their personal finances efficiently with offline-first data storage.
 
 ---
 
@@ -8,19 +8,29 @@ A modern **expense tracking app** built using **React Native**, allowing users t
 
 - 📊 Track daily, weekly, and monthly expenses
 - 🧾 Categorize expenses (e.g., Grocery, Transport, Entertainment)
-- 💰 Set spending limits and track budget utilization
-- ✨ Clean, responsive interface that follows your device’s light or dark mode
+- 💰 Manage spending and analyze expense patterns
+- ⚡ Offline-first experience with fast local database
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Tech          | Description                                       |
-| ------------- | ------------------------------------------------- |
-| React Native  | Core framework for building the app               |
-| Redux         | State management solution                         |
-| Redux Persist | Persist and rehydrate Redux state across sessions |
-| JavaScript    | Component logic                                   |
+| Tech          | Description                                              |
+| ------------- | -------------------------------------------------------- |
+| React Native  | Core framework for building the app                      |
+| Redux Toolkit | State management solution                                |
+| WatermelonDB  | High-performance, offline-first database built on SQLite |
+| TypeScript    | Type-safe development                                    |
+
+---
+
+## 🗄️ Data Storage
+
+The app uses WatermelonDB for local data storage:
+
+- 📡 Works offline
+- ⚡ Fast access using SQLite
+- 💾 Stores expense records locally on the device
 
 ---
 
@@ -32,7 +42,7 @@ Ensure you have the following installed on your machine:
 - npm (comes with Node.js)
 - Android Studio (for Android development)
 - Xcode (for iOS development – macOS only)
-- React Native CLI (optional, if not using Expo)
+- React Native CLI
 
 ---
 
@@ -81,7 +91,6 @@ Follow these steps to set up and run the project:
 - 🔔 Expense reminders & notifications
 - 📈 Weekly, monthly and yearly expense analytics
 - ☁️ Cloud sync and login system
-- 🌐 Localization support
 
 ---
 

@@ -1,11 +1,10 @@
 import React, {useState} from 'react';
 import {StyleSheet, View, Text, TouchableOpacity} from 'react-native';
 import {useTheme, Surface} from 'react-native-paper';
-// @ts-ignore
+import {useSelector} from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome6';
 import HexagonFAB from '../Common/HexagonFab';
 import WelcomeScreen from '../Screens/WelcomeScreen';
-import {useSelector} from 'react-redux';
 import {RootState} from '../../Store/store';
 import ExpenseHistoryScreen from '../Screens/ExpenseHistoryScreen';
 import ReportScreen from '../Screens/ReportScreen';

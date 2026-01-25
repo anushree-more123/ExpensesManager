@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {RootState} from './src/Store/store';
 import AppIntroSlides from './src/Components/Screens/AppIntroSlides';
 import Navigator from './src/Components/Navigation/Navigator';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AppLoaded = () => {
   const [isDone, setIsDone] = useState(false);

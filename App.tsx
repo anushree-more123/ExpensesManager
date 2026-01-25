@@ -4,10 +4,10 @@ import {useColorScheme, StyleSheet} from 'react-native';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {Provider as PaperProvider} from 'react-native-paper';
 import {Provider} from 'react-redux';
+import {PersistGate} from 'redux-persist/integration/react';
 import {store, persistor} from './src/Store/store';
 import {lightTheme, darkTheme} from './src/theme/theme';
 import AppLoaded from './AppLoaded';
-import {PersistGate} from 'redux-persist/integration/react';
 
 function App(): React.JSX.Element {
   const colorScheme = useColorScheme();

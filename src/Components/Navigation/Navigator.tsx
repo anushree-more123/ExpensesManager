@@ -1,10 +1,10 @@
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
-import MainTabNavigator from './MainTabNavigator';
 import AddUpdateExpenseScreen from '../Screens/AddUpdateExpenseScreen';
 import CategoriesScreen from '../Categories/CategoriesScreen';
 import ManageCategoryScreen from '../Categories/ManageCategoryScreen';
 import {RootStackParamList} from './RootStackParamList';
+import MainTabNavigator from './MainTabNavigator';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
