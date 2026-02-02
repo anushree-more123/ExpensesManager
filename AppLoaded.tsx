@@ -9,19 +9,19 @@ const AppLoaded = () => {
   const [isDone, setIsDone] = useState(false);
   const {expenseHistory} = useSelector((state: RootState) => state.expenses);
 
-  //  useEffect(() => {
-  //   const checkIntroStatus = async () => {
-  //     try {
-  //       const introStatus = await AsyncStorage.getItem('intro_done');
-  //       setIsDone(introStatus === 'true');
-  //     } catch (error) {
-  //       console.error('Error reading intro status from AsyncStorage:', error);
-  //       setIsDone(false);
-  //     }
-  //   };
+  useEffect(() => {
+    const checkIntroStatus = async () => {
+      try {
+        const introStatus = await AsyncStorage.getItem('intro_done');
+        setIsDone(introStatus === 'true');
+      } catch (error) {
+        console.error('Error reading intro status from AsyncStorage:', error);
+        setIsDone(false);
+      }
+    };
 
-  //   checkIntroStatus();
-  // }, []);
+    checkIntroStatus();
+  }, []);
 
   const handleDone = async () => {
     try {
